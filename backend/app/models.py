@@ -689,3 +689,106 @@ class SchedulePlan:
             next_run=str(row.get("下次执行", "")),
             status=str(row.get("status", "待激活")),
         )
+
+# ---------------------------------------------------------------------------
+# 入口收件与调度认领
+# ---------------------------------------------------------------------------
+
+@dataclass
+class EntryAddressLine:
+    """申请中的一个入口地址行：保留原地址、原行位置和该行活动窗口。"""
+    url: str
+    line_no: int = 1
+    window_start: str = ""
+    window_end: str = ""
+    window_label: str = ""
+
+    @classmethod
+    def from_payload(cls, raw: Any, index: int = 1) -> EntryAddressLine:
+        if isinstance(raw, str):
+            return cls(url=raw, line_no=index)
+        reader = (lambda *keys, default=None: _payload_get(raw, keys, default))
+        try:
+            line_no = int(reader("line_no", "行号", default=index))
+        except (TypeError, ValueError):
+            line_no = index
+        return cls(
+            url=str(reader("url", "address", "入口地址", default="") or ""),
+            line_no=line_no,
+            window_start=str(reader("window_start", "窗口起", default="") or ""),
+            window_end=str(reader("window_end", "窗口止", default="") or ""),
+            window_label=str(reader("window_label", "活动窗口", default="") or ""),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "url": self.url,
+            "line_no": self.line_no,
+            "window_start": self.window_start,
+            "window_end": self.window_end,
+            "window_label": self.window_label,
+        }
+
+
+@dataclass
+class EntryApplication:
+    """一份采集入口申请：同一次批量收件可以携带多份申请。"""
+    application_id: str
+    job_id: str
+    source: str
+    addresses: list[EntryAddressLine] = field(default_factory=list)
+    job_kind: str = "日常采集"
+    priority: Any = None
+    window_start: str = ""
+    window_end: str = ""
+    window_label: str = ""
+
+    @classmethod
+    def from_payload(cls, raw: Any, index: int = 1,
+                     submitted_at: str = "") -> EntryApplication:
+        reader = (lambda *keys, default=None: _payload_get(raw, keys, default))
+        application_id = str(reader("application_id", "申请编号", default="") or "").strip()
+        if not application_id:
+            application_id = f"APP-{submitted_at[0:10].replace('-', '')}-{index:04d}"
+        return cls(
+            application_id=application_id,
+            job_id=str(reader("job_id", "来源作业", default="") or "").strip(),
+            source=str(reader("source", "合法来源", default="") or "").strip(),
+            job_kind=str(reader("job_kind", "申请类型", default="日常采集") or "日常采集"),
+            priority=reader("priority", "分配优先级", default=None),
+            window_start=str(reader("window_start", "窗口起", default="") or "").strip(),
+            window_end=str(reader("window_end", "窗口止", default="") or "").strip(),
+            window_label=str(reader("window_label", "活动窗口", default="") or "").strip(),
+            addresses=[
+                EntryAddressLine.from_payload(line, position)
+                for position, line in enumerate(
+                    reader("addresses", "地址列表", default=[]) or [], start=1)
+            ],
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "application_id": self.application_id,
+            "job_id": self.job_id,
+            "source": self.source,
+            "job_kind": self.job_kind,
+            "priority": self.priority,
+            "window_start": self.window_start,
+            "window_end": self.window_end,
+            "window_label": self.window_label,
+            "addresses": [line.to_dict() for line in self.addresses],
+        }
+
+
+def _payload_get(raw: Any, keys: tuple[str, ...], default: Any) -> Any:
+    if isinstance(raw, dict):
+        for key in keys:
+            if key in raw and raw[key] is not None:
+                return raw[key]
+        return default
+    for key in keys:
+        if hasattr(raw, key):
+            value = getattr(raw, key)
+            if value is not None:
+                return value
+    return default

@@ -795,5 +795,9 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '变更摘要': '操作审计样例3',
   '操作时间': '2026-09-03',
   '来源节点': '操作审计样例3',
-  '审计结果': '操作审计样例3'}]
+  '审计结果': '操作审计样例3'}],
+    "entry_intake": [],
+    "entry_intake_line": [],
+    "entry_receipt": [],
+    "entry_claim": [],
 }

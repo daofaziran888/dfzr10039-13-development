@@ -59,6 +59,9 @@ class BaseModuleService:
         rows.append(entry)
         return entry, []
 
+    def missing_message(self, missing: list[str]) -> str:
+        return f"缺少必填字段：{'、'.join(missing)}"
+
     def run_action(self, entry_id: int, action: str) -> tuple[dict[str, Any] | None, str]:
         entry = store.find(self.MODULE, entry_id)
         if entry is None:

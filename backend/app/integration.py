@@ -9,6 +9,7 @@
 - data_archive ← batch_store
 - crawl_cost ← proxy_pool
 - crawl_job → scheduler
+- 入口收件 → entry_claim → crawl_job（批量收件、同窗口归属、逐条执行登记）
 """
 from __future__ import annotations
 
@@ -24,7 +25,35 @@ from app.models import (
     ProxyNode, QualitySample, RawExtractedContent, SampleMethod,
     SchedulePlan, SiteConfig, SiteType, StorageBatch, UrlFingerprint,
 )
+from app.entry_intake import (
+    IntakeError, claim_executable, get_receipt, list_claims, query_application,
+    record_execution, submit_intake,
+)
 from app.store import store
+
+
+# ---------------------------------------------------------------------------
+# 流水线 0: 入口收件 → 调度认领 → 采集作业
+# ---------------------------------------------------------------------------
+
+def receive_entry_applications(applications: list[dict[str, Any]], **options: Any
+                               ) -> dict[str, Any]:
+    """批量接收入口申请并登记调度认领，返回逐条回执。"""
+    return submit_intake(applications, **options)
+
+
+def scheduler_claim_entries(receipt_id: str | None = None,
+                            claim_ids: list[str] | None = None,
+                            claimed_by: str = "scheduler") -> dict[str, Any]:
+    """调度按回执认领可执行地址。"""
+    return claim_executable(receipt_id=receipt_id, claim_ids=claim_ids,
+                            claimed_by=claimed_by)
+
+
+def register_entry_execution(claim_id: str, application_id: str | None = None,
+                             result: str = "成功") -> dict[str, Any]:
+    """执行完成后登记入口实际由哪份申请提供。"""
+    return record_execution(claim_id, application_id=application_id, result=result)
 
 
 # ---------------------------------------------------------------------------

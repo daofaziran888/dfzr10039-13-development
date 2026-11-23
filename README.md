@@ -11,11 +11,14 @@
 .
 ├── frontend/                 Vue 3 + Vite + TypeScript 前端
 │   ├── src/views/WorkbenchView.vue|tsx  全部模块共享工作台
-│   ├── src/data/modules.ts              18个业务模块配置
+│   ├── src/views/IntakeView.vue         入口收件回执工作台（/intake）
+│   ├── src/data/modules.ts              全部业务模块配置
 │   ├── src/api/              统一请求封装
 │   └── vite.config.ts        dev server 配置（open: false）
 ├── backend/                  FastAPI（Python） 后端
 │   ├── app/routers/resource.py  通用查询/导出/登记/动作接口
+│   ├── app/routers/intake.py    批量收件、逐条追查、认领与执行登记接口
+│   ├── app/entry_intake.py      入口收件回执与调度认领领域逻辑
 │   ├── app/services/<key>.py    每个模块独立领域逻辑
 │   ├── app/services/base.py     共享服务骨架
 │   └── app/store.py          内存数据仓库与示例数据
@@ -72,6 +75,31 @@ npm run dev
 | 差异检测 | `diff_check` | 差异记录 | 记录编号、目标站点、检测页面 |
 | 导出任务 | `export_task` | 导出记录 | 记录编号、数据来源、导出格式 |
 | 操作审计 | `audit_log` | 审计记录 | 记录编号、操作模块、操作人 |
+| 入口收件回执 | `entry_intake` | 收件申请 | 申请编号、来源作业、分配优先级 |
+| 回执逐条明细 | `entry_intake_line` | 回执地址行 | 申请编号、行号、原地址 |
+| 收件回执 | `entry_receipt` | 收件回执 | 回执编号、地址行数、可执行地址数 |
+| 调度认领 | `entry_claim` | 入口认领 | 认领编号、入口地址、认领状态 |
+
+## 入口收件回执与调度认领
+
+URL 去重原来一次只接一份采集作业，现在可以一次提交多份入口申请并逐条追查。
+
+- `POST /api/intake/submit`：批量收件。每份申请保留原地址、原行位置和活动窗口；
+  地址等价性沿用 `url_dedup` 的指纹算法（查询参数次序不同视为同一地址）。
+- 同一指纹在同一活动窗口内只允许一份有效认领：已有有效认领优先，其次分配优先级数值大者
+  优先，同优先级先到先得；落败的一份登记为「已归属」并指向实际归属的认领。
+- 坏地址、时段已错过 / 未开始的地址只退回该行，同一申请的其它地址和其它作业照常推进。
+  已被领走的地址不会因为原申请重送或提高优先级而改归属。
+- `GET /api/intake/receipts/{回执}`：完整回执，包含申请列表、逐条明细和认领列表。
+- `GET /api/intake/receipts/{回执}/applications/{申请}`：单份申请逐条处置和未领走缘由。
+- `POST /api/intake/claims/claim`：调度从回执认领真正可执行的地址（待领取 → 已领取）。
+- `POST /api/intake/claims/{认领}/execution`：执行后登记实际提供入口的申请，提供方必须与
+  认领归属一致。
+- `GET /api/intake/claims?receipt_id=…&status=…&job_id=…`：按回执、状态或作业筛选认领。
+- `GET /api/intake/jobs/{作业}`：按作业汇总申请、实收地址和退回地址。
+
+前端 `/intake` 提供同样的批量收件、逐条回执、领取和执行登记操作；收件结果也会同步进
+`entry_intake`、`entry_intake_line`、`entry_receipt`、`entry_claim` 四个通用资源列表。
 
 ## 约定
 

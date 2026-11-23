@@ -70,3 +70,20 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .analysis-chart { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 12px 0; }
 .analysis-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--brand); min-width: 24px; position: relative; transition: height 0.4s; }
 .analysis-bar span { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+/* 入口收件回执 */
+.intake-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
+.intake-subtitle { font-size: 14px; margin: 0 0 10px; display: flex; gap: 10px; align-items: baseline; }
+.intake-muted { color: var(--muted); font-size: 12px; font-weight: normal; }
+.intake-application { border: 1px dashed var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.intake-application-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.intake-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.intake-grid .create-field { margin-bottom: 0; }
+.intake-lines { margin-top: 10px; }
+.intake-line-head, .intake-line { display: grid; grid-template-columns: 32px 2fr 1fr 1fr 48px; gap: 8px; align-items: center; margin-bottom: 6px; }
+.intake-line-head { font-size: 12px; color: var(--muted); }
+.intake-line input { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; width: 100%; }
+.intake-line-no { font-size: 12px; color: var(--muted); text-align: center; }
+.intake-url { word-break: break-all; font-family: monospace; font-size: 12px; }
+.intake-reason { color: var(--muted); font-size: 12px; }
+.intake-actions { justify-content: flex-end; margin-bottom: 8px; }
+.page-actions { display: flex; gap: 8px; }

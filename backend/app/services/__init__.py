@@ -24,6 +24,10 @@ from app.services.data_archive import DataArchiveService
 from app.services.diff_check import DiffCheckService
 from app.services.export_task import ExportTaskService
 from app.services.audit_log import AuditLogService
+from app.services.entry_intake import EntryIntakeService
+from app.services.entry_intake_line import EntryIntakeLineService
+from app.services.entry_receipt import EntryReceiptService
+from app.services.entry_claim import EntryClaimService
 
 SERVICES: dict[str, BaseModuleService] = {
     "crawl_site": CrawlSiteService(),
@@ -48,6 +52,10 @@ SERVICES: dict[str, BaseModuleService] = {
     "diff_check": DiffCheckService(),
     "export_task": ExportTaskService(),
     "audit_log": AuditLogService(),
+    "entry_intake": EntryIntakeService(),
+    "entry_intake_line": EntryIntakeLineService(),
+    "entry_receipt": EntryReceiptService(),
+    "entry_claim": EntryClaimService(),
 }
 
 
